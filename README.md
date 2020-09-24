@@ -1,6 +1,6 @@
 # DOCCS Confirmed Incarcerated Population By Facility
 
-schedule_script_addin.R: Schedules webscraping.R by time and frequency; uses taskscheduleR; for Windows
+schedule_script.R: Schedules webscraping.R by time and frequency; uses taskscheduleR; for Windows
 
 schedule_script_addin.R: Schedules webscraping.R by time and frequency by "Schedule scripts through Linux/Unix" (Addin in R Studio); uses cronR
 
