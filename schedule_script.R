@@ -11,7 +11,6 @@ setwd("/Users/mari/CANY/doccs_downloads")
 library(githubinstall)
 install_github("bnosac/taskscheduleR")
 library(taskscheduleR)
-githubinstall("taskscheduleR")
 
 taskscheduler_create(
   taskname = "r_web_scraping_doccs",
