@@ -1,0 +1,10 @@
+* DOCCS Confirmed Incarcerated Population By Facility
+
+This downloads the confirmed infected by facility numbers from doccs.
+
+controlFile.R depends on the login to decide where to run script from
+and sets the path asthedirectory that holds the file which is run.
+
+webscraping.R: downloads PDF of DOCCS Confirmed Incarcerated
+Population By Facility from https://doccs.ny.gov/doccs-covid-19-report
+as a pdf and saves it toa subdirectory called raw files
