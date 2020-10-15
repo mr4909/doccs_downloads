@@ -263,20 +263,9 @@ if (current_day == 1) {
   
   # calculate total increases and create a df
   totals <- df_pct %>%
-    select_if(is.numeric) %>%
-    map_dbl(sum)     
-  totals <- as.data.frame(totals)
-  totals <- totals %>% select(recovered_increase,
-                             deceased_increase,
-                             positive_total_increase,
-                             pending_test_increase,
-                             negative_test_increase)
-  
-  min_date
-  # print reults
-  # get top 5 facilities
-  # cat('Since', min_date, "there have been an additional", , "positive cases in DOCCS facilities.\n")
-
+    summarise_at(vars(matches("increase")), sum, na.rm = TRUE)
+  # add date
+  totals$date_since <- min_date
 
 # if it's not the first of the month  
 } else {
@@ -319,17 +308,9 @@ if (current_day == 1) {
   
   # calculate total increases and create a df
   totals <- df_pct %>%
-    select_if(is.numeric) %>%
-    map_dbl(sum)     
-  totals <- as.data.frame(totals)
-  totals <- totals %>% select(recovered_increase,
-                              deceased_increase,
-                              positive_total_increase,
-                              pending_test_increase,
-                              negative_test_increase)
-  
-  # print minimum date
-  min_date
+    summarise_at(vars(matches("increase")), sum, na.rm = TRUE)
+  # add date
+  totals$date_since <-min_date
 
 }
 
