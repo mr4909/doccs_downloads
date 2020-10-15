@@ -17,8 +17,30 @@ for(p in requiredPackages){
   library(p,character.only = TRUE)
 }
 
+getwd <- function(){
+  thisLogin <- Sys.info()['login']
+  if(thisLogin=="evan") {
+    base <- '/home'
+    canyF <- 'Documents/cany/corona/doccs_downloads/rawFiles'
+  }
+  if(thisLogin=="mr4909"){
+    base <- '/Users'
+    canyF <- 'doccs_downloads/rawFiles'
+  }
+  if(thisLogin=="capp") {
+    base <- '/home'
+    canyF <- 'doccs_downloads/rawFiles'
+  }
+  wd <- paste(base,thisLogin,canyF,sep="/")
+  return(wd)
+}
+
+wd <- getwd()
 # list all pdfs in directory
-setwd("/Users/mari/doccs_downloads/rawFiles")
+setwd(wd)
+
+# list all pdfs in directory
+# setwd("/Users/mari/doccs_downloads/rawFiles")
 temp <- list.files(pattern = "*.pdf", full.names = TRUE)
 
 # create an empty data frame for the data
@@ -119,14 +141,14 @@ outputs.df$positive_total <- as.numeric(outputs.df$positive_total)
 outputs.df$pending_test <- as.numeric(outputs.df$pending_test)
 outputs.df$negative_test <- as.numeric(outputs.df$recovered)
 
-################
-# top 5s
-################
-
 # finds most recent date report
 max_date <- max(outputs.df$report_date, na.rm = TRUE)
 # finds first date report
 min_date <- min(outputs.df$report_date, na.rm = TRUE)
+
+################################################
+# top 5s
+################################################
 
 # subsets data to most recent report
 df_most_recent <- outputs.df %>% filter(report_date == max_date)
@@ -149,9 +171,9 @@ top5_deaths <- df_most_recent %>%
   slice(1:5) # take top 5 row per subgroup
 top5_deaths_names <- top5_deaths$facility
 
-################
-# increases
-################
+################################################
+# increases since September 28, 2020
+################################################
 
 #####
 # positive cases
@@ -177,22 +199,23 @@ df_pct <- df_pct %>%
   mutate(change_positive = pct_change > 0)
 
 # graph for percent changes in positive cases by facility
-ggplot(data = df_pct,
-       aes(x = reorder(facility, pct_change), y = pct_change,
-           fill = change_positive))+
-  geom_bar(stat = "identity")+
-  coord_flip()+
-  labs(x = "Facility", y = "Positive Cases Per Facility %",
-       title = "Percentage Change in Positive Cases Per Facility",
-       subtitles = "DOCCS Reports")+
-  theme_minimal()+
-  guides(fill = FALSE)
+# ggplot(data = df_pct,
+#        aes(x = reorder(facility, pct_change), y = pct_change,
+#            fill = change_positive))+
+#   geom_bar(stat = "identity")+
+#   coord_flip()+
+#   labs(x = "Facility", y = "Positive Cases Per Facility %",
+#        title = "Percentage Change in Positive Cases Per Facility",
+#        subtitles = "DOCCS Reports")+
+#   theme_minimal()+
+#   guides(fill = FALSE)
 
-################
+################################################
 # increases for current month
-################
+################################################
 
-# organize date, max - grab latest, look max of what remains , look at 29 as calc increases last day of the last month; working directory 
+# organize date, max - grab latest, look max of what remains , 
+# look at 29 as calc increases last day of the last month; working directory 
 
 # most recent month report information
 current_month <- format(as.Date(max_date), "%m")
