@@ -1,6 +1,6 @@
 #######################################
 # DOCCS Covid Reports
-# Creates df of DOCCS Reports 
+# Creates tables from DOCCS COVID Reports 
 # by Mari Roberts
 # 10/14/2020
 #######################################
@@ -141,12 +141,6 @@ outputs.df$positive_total <- as.numeric(outputs.df$positive_total)
 outputs.df$pending_test <- as.numeric(outputs.df$pending_test)
 outputs.df$negative_test <- as.numeric(outputs.df$negative_test)
 
-# finds most recent date report
-max_date <- max(outputs.df$report_date, na.rm = TRUE)
-
-# finds last day of previous month
-min_date <- min(outputs.df$report_date, na.rm = TRUE)
-
 ##################
 # create variables
 ##################
@@ -154,99 +148,160 @@ min_date <- min(outputs.df$report_date, na.rm = TRUE)
 # active positive cases (not recovered or deceased)
 # total tests given (positive + negative)
 outputs.df <- outputs.df %>% mutate(positive_active = positive_total-deceased-recovered,
-                                    tests_given = positive_total + negative_test)
+                                    tests_given = positive_total + negative_test + pending_test)
 
 # find positivity rate
-outputs.df <- outputs.df %>% mutate(positivity_rate = positive_total/tests_given)
+outputs.df <- outputs.df %>% mutate(positivity_rate = positive_total/(tests_given-pending_test))
 
-################################################
+# finds most recent date report
+lastReport <- outputs.df[outputs.df$report_date== max(outputs.df$report_date),]
+notThisMonthMask <- outputs.df$month!=lastReport$month[1] | outputs.df$year!=lastReport$year[1]
+notThisMonth <- outputs.df[notThisMonthMask,]
+lastNotThisMonth <- notThisMonth[notThisMonth$report_date==max(notThisMonth$report_date),]
+
+##########
 # top 5s
-################################################
+##########
 
-# subsets data to most recent report
-df_most_recent <- outputs.df %>% filter(report_date == max_date)
-
-# top 5 places for positive cases
-top5_positives <- df_most_recent %>%
-  arrange(-positive_total) %>% # sort
-  slice(1:5) # take top 5 row per subgroup
-top5_positives_names <- top5_positives$facility
-
-# top 5 places for pending tests
-top5_pending_tests <- df_most_recent %>%
-  arrange(-pending_test) %>% # sort
-  slice(1:5) # take top 5 row per subgroup
-top5_pending_tests_names <- top5_pending_tests$facility
-
-# top 5 places for deceased
-top5_deaths <- df_most_recent %>%
-  arrange(-deceased) %>% # sort
-  slice(1:5) # take top 5 row per subgroup
-top5_deaths_names <- top5_deaths$facility
+# # top 5 places for positive cases
+# top5_positives <- lastReport %>%
+#   arrange(-positive_total) %>% # sort
+#   slice(1:5) # take top 5 row per subgroup
+# top5_positives_names <- top5_positives$facility
+# 
+# # top 5 places for pending tests
+# top5_pending_tests <- lastReport %>%
+#   arrange(-pending_test) %>% # sort
+#   slice(1:5) # take top 5 row per subgroup
+# top5_pending_tests_names <- top5_pending_tests$facility
+# 
+# # top 5 places for deceased
+# top5_deaths <- lastReport %>%
+#   arrange(-deceased) %>% # sort
+#   slice(1:5) # take top 5 row per subgroup
+# top5_deaths_names <- top5_deaths$facility
 
 ################################################################################################
 # INCREASES FOR CURRENT MONTH
 ################################################################################################
 
-# most recent month report information
-current_month <- format(as.Date(max_date), "%m")
-# subset data to current month
-df_current_month <- outputs.df %>% filter(month == current_month)
+# rename variables for last day of previous month
+df_min <- lastNotThisMonth %>% select(facility, 
+                                      recovered_min = recovered,
+                                      deceased_min = deceased,
+                                      positive_total_min = positive_total,
+                                      pending_test_min = pending_test,
+                                      negative_test_min = negative_test,
+                                      positive_active_min = positive_active,
+                                      tests_given_min = tests_given,
+                                      positivity_rate_min = positivity_rate)
 
-# change current month to numeric value
-current_month <- as.numeric(current_month)
-# subtract by 1
-previous_month <- current_month - 1
-# subset data to previous month
-df_previous_month <- outputs.df %>% filter(month == previous_month)
-# last day of previous month used as baseline
-min_date <- max(df_previous_month$report_date, na.rm = TRUE)
-# subset to last day of previous month
-df_min <- df_previous_month %>% filter(report_date == min_date) %>% select(facility, 
-                                                                           recovered_min = recovered,
-                                                                           deceased_min = deceased,
-                                                                           positive_total_min = positive_total,
-                                                                           pending_test_min = pending_test,
-                                                                           negative_test_min = negative_test,
-                                                                           positive_active_min = positive_active,
-                                                                           tests_given_min = tests_given,
-                                                                           positivity_rate_min = positivity_rate)
-
-# most recent report information for the current month
-df_max <- df_current_month %>% filter(report_date == max_date) %>% select(recovered_max = recovered,
-                                                                          deceased_max = deceased,
-                                                                          positive_total_max = positive_total,
-                                                                          pending_test_max = pending_test,
-                                                                          negative_test_max = negative_test,
-                                                                          positive_active_max = positive_active,
-                                                                          tests_given_max = tests_given,
-                                                                          positivity_rate_max = positivity_rate)
+# rename variables for current report
+df_max <- lastReport %>% select(recovered_max = recovered,
+                                deceased_max = deceased,
+                                positive_total_max = positive_total,
+                                pending_test_max = pending_test,
+                                negative_test_max = negative_test,
+                                positive_active_max = positive_active,
+                                tests_given_max = tests_given,
+                                positivity_rate_max = positivity_rate)
 
 # cbind df_min with df_max
 df_final <- cbind(df_min, df_max)
 
-# find increase 
+# find increases
 df_final <- df_final %>% mutate(recovered_increase = recovered_max-recovered_min,
-                            deceased_increase = deceased_max-deceased_min,
-                            positive_total_increase = positive_total_max-positive_total_min,
-                            pending_test_increase = pending_test_max-pending_test_min,
-                            negative_test_increase = negative_test_max-negative_test_min,
-                            positive_active_increase = positive_active_max-positive_active_min,
-                            tests_given_increase = tests_given_max-tests_given_min,
-                            positivity_rate_increase = positivity_rate_max-positivity_rate_min)
+                                deceased_increase = deceased_max-deceased_min,
+                                positive_total_increase = positive_total_max-positive_total_min,
+                                pending_test_increase = pending_test_max-pending_test_min,
+                                negative_test_increase = negative_test_max-negative_test_min,
+                                positive_active_increase = positive_active_max-positive_active_min,
+                                tests_given_increase = tests_given_max-tests_given_min,
+                                positivity_rate_increase = positivity_rate_max-positivity_rate_min)
 
 df_final <- df_final %>% select(facility,
                                 recovered_increase,
                                 deceased_increase,
+                                positive_active_increase,
                                 positive_total_increase,
                                 pending_test_increase,
                                 negative_test_increase,
-                                positive_active_increase,
                                 tests_given_increase,
                                 positivity_rate_increase)
 
-# calculate total increases and create a df
-totals <- df_final %>%
-  summarise_at(vars(matches("increase")), sum, na.rm = TRUE)
-# add baseline date
-totals$date_since <- min_date
+##########
+# top 5s increases
+##########
+
+# issue with top 5
+# doesn't account for zeros
+# doesn't account for duplicate values
+
+# create an empty data frame for the pdf data
+# top5.df <- data.frame(matrix(ncol = 0, nrow = 0))
+# 
+# for(i in df_final){
+# 
+#   df <- c(1)
+# 
+#   # bind the rows
+#   top5.df <- cbind(top5.df, df)
+# }
+
+# top 5 places for recovered_increase
+top5_recovered_increase <- df_final %>%
+  arrange(-recovered_increase) %>% # sort
+  slice(1:5) %>% # take top 5 row per subgroup
+  select(facility, recovered_increase)
+
+# top 5 places for deceased_increase
+top5_deceased_increase <- df_final %>%
+  arrange(-deceased_increase) %>% # sort
+  slice(1:5) %>% # take top 5 row per subgroup
+  select(facility, deceased_increase)
+
+# top 5 places for positive_active_increase
+top5_positive_active_increase <- df_final %>%
+  arrange(-positive_active_increase) %>% # sort
+  slice(1:5) %>% # take top 5 row per subgroup
+  select(facility, positive_active_increase)
+
+# top 5 places for positive_total_increase
+top5_positive_total_increase <- df_final %>%
+  arrange(-positive_total_increase) %>% # sort
+  slice(1:5) %>% # take top 5 row per subgroup
+  select(facility, positive_total_increase)
+
+# top 5 places for pending_test_increase
+top5_pending_test_increase <- df_final %>%
+  arrange(-pending_test_increase) %>% # sort
+  slice(1:5) %>% # take top 5 row per subgroup
+  select(facility, pending_test_increase)
+
+# top 5 places for negative_test_increase
+top5_negative_test_increase <- df_final %>%
+  arrange(-negative_test_increase) %>% # sort
+  slice(1:5) %>% # take top 5 row per subgroup
+  select(facility, negative_test_increase)
+
+# top 5 places for tests_given_increase
+top5_tests_given_increase <- df_final %>%
+  arrange(-tests_given_increase) %>% # sort
+  slice(1:5) %>% # take top 5 row per subgroup
+  select(facility, tests_given_increase)
+
+# top 5 places for positivity_rate_increase
+top5_positivity_rate_increase <- df_final %>%
+  arrange(-positivity_rate_increase) %>% # sort
+  slice(1:5) %>% # take top 5 row per subgroup
+  select(facility, positivity_rate_increase)
+
+# combine everything into one dataframe
+top5_all <- data.frame(top5_recovered_increase$facility,
+                       top5_deceased_increase$facility,
+                       top5_positive_active_increase$facility,
+                       top5_positive_total_increase$facility,
+                       top5_pending_test_increase$facility,
+                       top5_negative_test_increase$facility,
+                       top5_tests_given_increase$facility,
+                       top5_positivity_rate_increase$facility)
