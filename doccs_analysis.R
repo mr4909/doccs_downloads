@@ -190,7 +190,6 @@ top5_deaths_names <- top5_deaths$facility
 
 # most recent month report information
 current_month <- format(as.Date(max_date), "%m")
-
 # subset data to current month
 df_current_month <- outputs.df %>% filter(month == current_month)
 
@@ -202,7 +201,6 @@ previous_month <- current_month - 1
 df_previous_month <- outputs.df %>% filter(month == previous_month)
 # last day of previous month used as baseline
 min_date <- max(df_previous_month$report_date, na.rm = TRUE)
-
 # subset to last day of previous month
 df_min <- df_previous_month %>% filter(report_date == min_date) %>% select(facility, 
                                                                            recovered_min = recovered,
