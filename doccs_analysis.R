@@ -38,7 +38,7 @@ getwd <- function(){
 # set working directory
 wd <- getwd()
 setwd(wd)
-# setwd("/Users/mr4909/doccs_downloads/rawFiles")
+# setwd("/Users/mari/doccs_downloads/rawFiles")
 
 # list all pdfs in directory
 temp <- list.files(pattern = "*.pdf", full.names = TRUE)
@@ -211,10 +211,14 @@ current_month <- format(as.Date(max_date), "%m")
 # if so, use the last day of previous month as baseline
 #########################
 
+# find day of month
 current_day <- format(as.Date(max_date), "%d")
 
-# if its the first of the month
+# if its the first of the month, use the last day of previous month
 if (current_day == 1) {
+  
+  # subset data to most recent month
+  df_current_month <- outputs.df %>% filter(month == current_month)
   
   # change current month to numeric value
   current_month <- as.numeric(current_month)
@@ -234,7 +238,7 @@ if (current_day == 1) {
                                                                              negative_test_min = negative_test)
   
   # most recent report information for the current month
-  df_max <- df_previous_month %>% filter(report_date == max_date) %>% select(recovered_max = recovered,
+  df_max <- df_current_month %>% filter(report_date == max_date) %>% select(recovered_max = recovered,
                                                                              deceased_max = deceased,
                                                                              positive_total_max = positive_total,
                                                                              pending_test_max = pending_test,
@@ -243,19 +247,36 @@ if (current_day == 1) {
   # cbind df_min with df_max
   df_pct <- cbind(df_min, df_max)
   
-  # find increase in number of pending tests since beginning of the month
+  # find increase 
   df_pct <- df_pct %>% mutate(recovered_increase = recovered_max-recovered_min,
                               deceased_increase = deceased_max-deceased_min,
                               positive_total_increase = positive_total_max-positive_total_min,
                               pending_test_increase = pending_test_max-pending_test_min,
                               negative_test_increase = negative_test_max-negative_test_min)
   
-  # find % increase in number of pending tests since beginning of the month
-  df_pct <- df_pct %>% mutate(recovered_pct_change = (recovered_max-recovered_min)/recovered_min*100,
-                              deceased_pct_change = (deceased_max-deceased_min)/deceased_min*100,
-                              positive_total_pct_change = (positive_total_max-positive_total_min)/positive_total_min*100,
-                              pending_test_pct_change = (pending_test_max-pending_test_min)/pending_test_min*100,
-                              negative_test_pct_change = (negative_test_max-negative_test_min)/negative_test_min*100) 
+  # find % increase 
+  df_pct <- df_pct %>% mutate(recovered_pct_change = recovered_increase/recovered_min*100,
+                              deceased_pct_change = deceased_increase/deceased_min*100,
+                              positive_total_pct_change = positive_total_increase/positive_total_min*100,
+                              pending_test_pct_change =  pending_test_increase/pending_test_min*100,
+                              negative_test_pct_change = negative_test_increase/negative_test_min*100) 
+  
+  # calculate total increases and create a df
+  totals <- df_pct %>%
+    select_if(is.numeric) %>%
+    map_dbl(sum)     
+  totals <- as.data.frame(totals)
+  totals <- totals %>% select(recovered_increase,
+                             deceased_increase,
+                             positive_total_increase,
+                             pending_test_increase,
+                             negative_test_increase)
+  
+  min_date
+  # print reults
+  # get top 5 facilities
+  # cat('Since', min_date, "there have been an additional", , "positive cases in DOCCS facilities.\n")
+
 
 # if it's not the first of the month  
 } else {
@@ -282,20 +303,34 @@ if (current_day == 1) {
   # cbind with df_max
   df_pct <- cbind(df_min, df_max)
   
-  # find increase in number of pending tests since beginning of the month
+  # find increase 
   df_pct <- df_pct %>% mutate(recovered_increase = recovered_max-recovered_min,
                               deceased_increase = deceased_max-deceased_min,
                               positive_total_increase = positive_total_max-positive_total_min,
                               pending_test_increase = pending_test_max-pending_test_min,
                               negative_test_increase = negative_test_max-negative_test_min)
   
-  # find % increase in number of pending tests since beginning of the month
-  df_pct <- df_pct %>% mutate(recovered_pct_change = (recovered_max-recovered_min)/recovered_min*100,
-                              deceased_pct_change = (deceased_max-deceased_min)/deceased_min*100,
-                              positive_total_pct_change = (positive_total_max-positive_total_min)/positive_total_min*100,
-                              pending_test_pct_change = (pending_test_max-pending_test_min)/pending_test_min*100,
-                              negative_test_pct_change = (negative_test_max-negative_test_min)/negative_test_min*100) 
+  # find % increase 
+  df_pct <- df_pct %>% mutate(recovered_pct_change = recovered_increase/recovered_min*100,
+                              deceased_pct_change = deceased_increase/deceased_min*100,
+                              positive_total_pct_change = positive_total_increase/positive_total_min*100,
+                              pending_test_pct_change =  pending_test_increase/pending_test_min*100,
+                              negative_test_pct_change = negative_test_increase/negative_test_min*100) 
   
+  # calculate total increases and create a df
+  totals <- df_pct %>%
+    select_if(is.numeric) %>%
+    map_dbl(sum)     
+  totals <- as.data.frame(totals)
+  totals <- totals %>% select(recovered_increase,
+                              deceased_increase,
+                              positive_total_increase,
+                              pending_test_increase,
+                              negative_test_increase)
+  
+  # print minimum date
+  min_date
+
 }
 
 
