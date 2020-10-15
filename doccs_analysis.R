@@ -139,7 +139,7 @@ outputs.df$recovered <- as.numeric(outputs.df$recovered)
 outputs.df$deceased <- as.numeric(outputs.df$deceased)
 outputs.df$positive_total <- as.numeric(outputs.df$positive_total)
 outputs.df$pending_test <- as.numeric(outputs.df$pending_test)
-outputs.df$negative_test <- as.numeric(outputs.df$recovered)
+outputs.df$negative_test <- as.numeric(outputs.df$negative_test)
 
 ##################
 # create variables
