@@ -18,7 +18,7 @@ for(p in requiredPackages){
 }
 
 # list all pdfs in directory
-setwd("/Users/mr4909/doccs_downloads/rawFiles")
+setwd("/Users/mari/doccs_downloads/rawFiles")
 temp <- list.files(pattern = "*.pdf", full.names = TRUE)
 
 # create an empty data frame for the data
@@ -189,8 +189,10 @@ ggplot(data = df_pct,
   guides(fill = FALSE)
 
 ################
-# increases for the month
+# increases for current month
 ################
+
+# organize date, max - grab latest, look max of what remains , look at 29 as calc increases last day of the last month; working directory 
 
 # most recent month report information
 current_month <- format(as.Date(max_date), "%m")
@@ -231,7 +233,16 @@ df_pct <- df_pct %>% mutate(recovered_pct_change = (recovered_max-recovered_min)
                             pending_test_pct_change = (pending_test_max-pending_test_min)/pending_test_min*100,
                             negative_test_pct_change = (negative_test_max-negative_test_min)/negative_test_min*100) 
 
+# start writing to an output file
+sink('analysis-output.txt')
+
 # get top 5 facilities
-cat('The 5 facilities with the most positive cases are', top5_positives_names, "\n") 
-cat('The 5 facilities with the most deaths are', top5_deaths_names, "\n") 
-cat('The 5 facilities with the most pending tests are', top5_pending_tests_names, "\n") 
+cat('The 5 facilities with the most positive cases to date are', top5_positives_names, ".\n", 
+    'The 5 facilities with the most deaths  to date are', top5_deaths_names, ".\n",
+    'The 5 facilities with the most pending tests  to date are', top5_pending_tests_names, ".\n")
+
+# other stats
+
+             
+# stop writing to the file
+sink()          
