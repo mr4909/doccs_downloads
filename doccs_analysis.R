@@ -198,74 +198,104 @@ df_pct <- df_pct %>%
 df_pct <- df_pct %>%
   mutate(change_positive = pct_change > 0)
 
-# graph for percent changes in positive cases by facility
-# ggplot(data = df_pct,
-#        aes(x = reorder(facility, pct_change), y = pct_change,
-#            fill = change_positive))+
-#   geom_bar(stat = "identity")+
-#   coord_flip()+
-#   labs(x = "Facility", y = "Positive Cases Per Facility %",
-#        title = "Percentage Change in Positive Cases Per Facility",
-#        subtitles = "DOCCS Reports")+
-#   theme_minimal()+
-#   guides(fill = FALSE)
-
-################################################
-# increases for current month
-################################################
-
-# organize date, max - grab latest, look max of what remains , 
-# look at 29 as calc increases last day of the last month; working directory 
+################################################################################################
+# INCREASES FOR CURRENT MONTH
+################################################################################################
 
 # most recent month report information
 current_month <- format(as.Date(max_date), "%m")
 
-# subset data to most recent month i.e. month of October
-df_current_month <- outputs.df %>% filter(month == current_month)
+#########################
+# check to make sure it isn't the first of the month
+# if so, use the last day of previous month as baseline
+#########################
 
-# earliest report information for the month
-# finds first date report
-min_date <- min(df_current_month$report_date, na.rm = TRUE)
-df_min <- df_current_month %>% filter(report_date == min_date) %>% select(facility, 
-                                                                          recovered_min = recovered,
-                                                                          deceased_min = deceased,
-                                                                          positive_total_min = positive_total,
-                                                                          pending_test_min = pending_test,
-                                                                          negative_test_min = negative_test)
+current_day <- format(as.Date(max_date), "%d")
 
-# most recent report information for the month
-df_max <- df_current_month %>% filter(report_date == max_date) %>% select(recovered_max = recovered,
-                                                                          deceased_max = deceased,
-                                                                          positive_total_max = positive_total,
-                                                                          pending_test_max = pending_test,
-                                                                          negative_test_max = negative_test)
-# cbind with df_max
-df_pct <- cbind(df_min, df_max)
+# if its the first of the month
+if (current_day == 1) {
+  
+  # change current month to numeric value
+  current_month <- as.numeric(current_month)
+  # subtract by 1
+  previous_month <- current_month - 1
+  # subset data to previous month
+  df_previous_month <- outputs.df %>% filter(month == previous_month)
+  # last day of previous month used as baseline
+  min_date <- max(df_previous_month$report_date, na.rm = TRUE)
+  
+  # subset to last day of previous month
+  df_min <- df_previous_month %>% filter(report_date == min_date) %>% select(facility, 
+                                                                             recovered_min = recovered,
+                                                                             deceased_min = deceased,
+                                                                             positive_total_min = positive_total,
+                                                                             pending_test_min = pending_test,
+                                                                             negative_test_min = negative_test)
+  
+  # most recent report information for the current month
+  df_max <- df_previous_month %>% filter(report_date == max_date) %>% select(recovered_max = recovered,
+                                                                             deceased_max = deceased,
+                                                                             positive_total_max = positive_total,
+                                                                             pending_test_max = pending_test,
+                                                                             negative_test_max = negative_test)
+  # cbind df_min with df_max
+  df_pct <- cbind(df_min, df_max)
+  
+  # find increase in number of pending tests since beginning of the month
+  df_pct <- df_pct %>% mutate(recovered_increase = recovered_max-recovered_min,
+                              deceased_increase = deceased_max-deceased_min,
+                              positive_total_increase = positive_total_max-positive_total_min,
+                              pending_test_increase = pending_test_max-pending_test_min,
+                              negative_test_increase = negative_test_max-negative_test_min)
+  
+  # find % increase in number of pending tests since beginning of the month
+  df_pct <- df_pct %>% mutate(recovered_pct_change = (recovered_max-recovered_min)/recovered_min*100,
+                              deceased_pct_change = (deceased_max-deceased_min)/deceased_min*100,
+                              positive_total_pct_change = (positive_total_max-positive_total_min)/positive_total_min*100,
+                              pending_test_pct_change = (pending_test_max-pending_test_min)/pending_test_min*100,
+                              negative_test_pct_change = (negative_test_max-negative_test_min)/negative_test_min*100) 
 
-# find increase in number of pending tests since beginning of the month
-df_pct <- df_pct %>% mutate(recovered_increase = recovered_max-recovered_min,
-                            deceased_increase = deceased_max-deceased_min,
-                            positive_total_increase = positive_total_max-positive_total_min,
-                            pending_test_increase = pending_test_max-pending_test_min,
-                            negative_test_increase = negative_test_max-negative_test_min)
+# if it's not the first of the month  
+} else {
+  
+  # subset data to most recent month
+  df_current_month <- outputs.df %>% filter(month == current_month)
+  
+  # earliest report information for the current month
+  min_date <- min(df_current_month$report_date, na.rm = TRUE)
+  df_min <- df_current_month %>% filter(report_date == min_date) %>% select(facility, 
+                                                                            recovered_min = recovered,
+                                                                            deceased_min = deceased,
+                                                                            positive_total_min = positive_total,
+                                                                            pending_test_min = pending_test,
+                                                                            negative_test_min = negative_test)
+  
+  # most recent report information for the month
+  df_max <- df_current_month %>% filter(report_date == max_date) %>% select(recovered_max = recovered,
+                                                                            deceased_max = deceased,
+                                                                            positive_total_max = positive_total,
+                                                                            pending_test_max = pending_test,
+                                                                            negative_test_max = negative_test)
+  # cbind with df_max
+  df_pct <- cbind(df_min, df_max)
+  
+  # find increase in number of pending tests since beginning of the month
+  df_pct <- df_pct %>% mutate(recovered_increase = recovered_max-recovered_min,
+                              deceased_increase = deceased_max-deceased_min,
+                              positive_total_increase = positive_total_max-positive_total_min,
+                              pending_test_increase = pending_test_max-pending_test_min,
+                              negative_test_increase = negative_test_max-negative_test_min)
+  
+  # find % increase in number of pending tests since beginning of the month
+  df_pct <- df_pct %>% mutate(recovered_pct_change = (recovered_max-recovered_min)/recovered_min*100,
+                              deceased_pct_change = (deceased_max-deceased_min)/deceased_min*100,
+                              positive_total_pct_change = (positive_total_max-positive_total_min)/positive_total_min*100,
+                              pending_test_pct_change = (pending_test_max-pending_test_min)/pending_test_min*100,
+                              negative_test_pct_change = (negative_test_max-negative_test_min)/negative_test_min*100) 
+  
+}
 
-# find % increase in number of pending tests since beginning of the month
-df_pct <- df_pct %>% mutate(recovered_pct_change = (recovered_max-recovered_min)/recovered_min*100,
-                            deceased_pct_change = (deceased_max-deceased_min)/deceased_min*100,
-                            positive_total_pct_change = (positive_total_max-positive_total_min)/positive_total_min*100,
-                            pending_test_pct_change = (pending_test_max-pending_test_min)/pending_test_min*100,
-                            negative_test_pct_change = (negative_test_max-negative_test_min)/negative_test_min*100) 
 
-# start writing to an output file
-sink('analysis-output.txt')
 
-# get top 5 facilities
-cat('The 5 facilities with the most positive cases to date are', top5_positives_names, ".\n", 
-    'The 5 facilities with the most deaths  to date are', top5_deaths_names, ".\n",
-    'The 5 facilities with the most pending tests  to date are', top5_pending_tests_names, ".\n")
 
-# other stats
 
-             
-# stop writing to the file
-sink()          
