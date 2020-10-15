@@ -233,20 +233,12 @@ if (current_day == 1) {
                                                                              pending_test_min = pending_test,
                                                                              negative_test_min = negative_test)
   
-  # add date to variable names
-  
-  
-  
   # most recent report information for the current month
   df_max <- df_previous_month %>% filter(report_date == max_date) %>% select(recovered_max = recovered,
                                                                              deceased_max = deceased,
                                                                              positive_total_max = positive_total,
                                                                              pending_test_max = pending_test,
                                                                              negative_test_max = negative_test)
-  
-  # add date to variable names
-  
-  
   
   # cbind df_min with df_max
   df_pct <- cbind(df_min, df_max)
@@ -280,22 +272,12 @@ if (current_day == 1) {
                                                                             pending_test_min = pending_test,
                                                                             negative_test_min = negative_test)
   
-  # add date to variable names
-  
-  
-  
-  
   # most recent report information for the month
   df_max <- df_current_month %>% filter(report_date == max_date) %>% select(recovered_max = recovered,
                                                                             deceased_max = deceased,
                                                                             positive_total_max = positive_total,
                                                                             pending_test_max = pending_test,
                                                                             negative_test_max = negative_test)
-  
-  # add date to variable names
-  
-  
-  
   
   # cbind with df_max
   df_pct <- cbind(df_min, df_max)
