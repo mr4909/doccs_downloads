@@ -35,15 +35,15 @@ getwd <- function(){
   return(wd)
 }
 
+# set working directory
 wd <- getwd()
-# list all pdfs in directory
 setwd(wd)
+# setwd("/Users/mr4909/doccs_downloads/rawFiles")
 
 # list all pdfs in directory
-# setwd("/Users/mari/doccs_downloads/rawFiles")
 temp <- list.files(pattern = "*.pdf", full.names = TRUE)
 
-# create an empty data frame for the data
+# create an empty data frame for the pdf data
 outputs.df <- setNames(data.frame(matrix(ncol = 7, nrow = 0)), c("facility", 
                                                                  "recovered",
                                                                  "deceased",                               
@@ -134,7 +134,7 @@ for(i in 1:length(temp)){
 
 }
 
-# fix variable types
+# fix variable types - change from chr to num
 outputs.df$recovered <- as.numeric(outputs.df$recovered)
 outputs.df$deceased <- as.numeric(outputs.df$deceased)
 outputs.df$positive_total <- as.numeric(outputs.df$positive_total)
@@ -143,7 +143,8 @@ outputs.df$negative_test <- as.numeric(outputs.df$recovered)
 
 # finds most recent date report
 max_date <- max(outputs.df$report_date, na.rm = TRUE)
-# finds first date report
+
+# finds first date report (might be from previous months)
 min_date <- min(outputs.df$report_date, na.rm = TRUE)
 
 ################################################
@@ -181,22 +182,22 @@ top5_deaths_names <- top5_deaths$facility
 
 # uses minimum report date and maximum report date
 
-# earliest report information
-df_min <- outputs.df %>% filter(report_date == min_date) %>% select(facility, pos_min = positive_total)
-# most recent report information
-df_max <- df_most_recent %>% select(pos_max = positive_total)
-# rbind with df_most_recent
-df_pct <- cbind(df_min, df_max)
-# find increase in number of pending tests since September 28, 2020
-df_pct <- df_pct %>% mutate(pct_change = (pos_max-pos_min)/pos_min*100)
-
-# negative or positive change
-df_pct <- df_pct %>%
-  mutate(change_positive = pct_change > 0)
-
-# negative or positive change
-df_pct <- df_pct %>%
-  mutate(change_positive = pct_change > 0)
+# # earliest report information
+# df_min <- outputs.df %>% filter(report_date == min_date) %>% select(facility, pos_min = positive_total)
+# # most recent report information
+# df_max <- df_most_recent %>% select(pos_max = positive_total)
+# # rbind with df_most_recent
+# df_pct <- cbind(df_min, df_max)
+# # find increase in number of pending tests since September 28, 2020
+# df_pct <- df_pct %>% mutate(pct_change = (pos_max-pos_min)/pos_min*100)
+# 
+# # negative or positive change
+# df_pct <- df_pct %>%
+#   mutate(change_positive = pct_change > 0)
+# 
+# # negative or positive change
+# df_pct <- df_pct %>%
+#   mutate(change_positive = pct_change > 0)
 
 ################################################################################################
 # INCREASES FOR CURRENT MONTH
@@ -232,12 +233,21 @@ if (current_day == 1) {
                                                                              pending_test_min = pending_test,
                                                                              negative_test_min = negative_test)
   
+  # add date to variable names
+  
+  
+  
   # most recent report information for the current month
   df_max <- df_previous_month %>% filter(report_date == max_date) %>% select(recovered_max = recovered,
                                                                              deceased_max = deceased,
                                                                              positive_total_max = positive_total,
                                                                              pending_test_max = pending_test,
                                                                              negative_test_max = negative_test)
+  
+  # add date to variable names
+  
+  
+  
   # cbind df_min with df_max
   df_pct <- cbind(df_min, df_max)
   
@@ -270,12 +280,23 @@ if (current_day == 1) {
                                                                             pending_test_min = pending_test,
                                                                             negative_test_min = negative_test)
   
+  # add date to variable names
+  
+  
+  
+  
   # most recent report information for the month
   df_max <- df_current_month %>% filter(report_date == max_date) %>% select(recovered_max = recovered,
                                                                             deceased_max = deceased,
                                                                             positive_total_max = positive_total,
                                                                             pending_test_max = pending_test,
                                                                             negative_test_max = negative_test)
+  
+  # add date to variable names
+  
+  
+  
+  
   # cbind with df_max
   df_pct <- cbind(df_min, df_max)
   
