@@ -38,7 +38,6 @@ getwd <- function(){
 # set working directory
 wd <- getwd()
 setwd(wd)
-# setwd("/Users/mari/doccs_downloads/rawFiles")
 
 # list all pdfs in directory
 temp <- list.files(pattern = "*.pdf", full.names = TRUE)
@@ -62,72 +61,151 @@ for(i in 1:length(temp)){
   
   # extract date string
   report_date <- pdf_name[c(2)]
-  #report_date <- gsub(',','',report_date)
   
-  # select lines with relevant information
-  pdf_name <-pdf_name[c(7:58)] 
+  # get line with just RMU
+  rmu <- grep("^RMU$", pdf_name)
+  rmu <- length(rmu)
   
-  # clean lines
-  pdf_name <- pdf_name[1:52] %>%
-    str_squish() %>%
-    str_replace_all("%","") %>% # remove % 
-    str_replace_all(",","") %>% # remove punctuation
-    str_replace_all("  "," ")   # remove extra white space
+  # IF RMU is on its own line, execute the following (basically removes the RMU line which is empty)
+  if (rmu > 0) {
+    
+    # remove RMU line that's empty
+    pdf_name_1 <- pdf_name[c(grep(pattern = "ADIRONDACK", pdf_name)):(grep(pattern = "MOHAWK/WALSH", pdf_name))]
+    pdf_name_2 <- pdf_name[c(grep(pattern = "MORIAH", pdf_name)):(grep(pattern = "WYOMING", pdf_name))]
+    pdf_name <- c(pdf_name_1, pdf_name_2)
+    
+    # select lines from adirondack to wyoming 
+    pdf_name <- pdf_name[(grep(pattern = "ADIRONDACK", pdf_name)):(grep(pattern = "WYOMING", pdf_name))] %>%
+      str_squish() %>%
+      str_replace_all("%","") %>% # remove % 
+      str_replace_all(",","") %>% # remove punctuation
+      str_replace_all("  "," ")   # remove extra white space
+    
+    # remove whitespace in facility names
+    pdf_name <- mgsub::mgsub(pdf_name, c("BARE HILL", 
+                                         "BEDFORD HILLS",
+                                         "CAPE VINCENT",
+                                         "FIVE POINTS",
+                                         "GREAT MEADOW ",
+                                         "GREEN HAVEN",
+                                         "HALE CREEK",
+                                         "MOHAWK/WALSH RMU",
+                                         "MOHAWK/WALSH",
+                                         "SING SING"), 
+                             c("BARE.HILL", 
+                               "BEDFORD.HILLS",
+                               "CAPE.VINCENT",                               
+                               "FIVE.POINTS", 
+                               "GREAT.MEADOW ", 
+                               "GREEN.HAVEN",
+                               "HALE.CREEK",
+                               "MOHAWK/WALSH.RMU",
+                               "MOHAWK/WALSH.RMU",
+                               "SING.SING"))
+    
+    # create dataframe
+    pdf_temp <- Reduce(rbind, strsplit(trimws(pdf_name),"\\s{2,}"))
+    rownames(pdf_temp) <- 1:dim(pdf_temp)[1] # give numbers as rownames
+    pdf_name <- data.frame(pdf_temp, stringsAsFactors=FALSE)
+    
+    # separate string by white space
+    pdf_name <- data.frame(do.call('rbind', strsplit(as.character(pdf_name$pdf_temp),' ',fixed=TRUE)),stringsAsFactors=FALSE)
+    
+    # fix date format
+    months.regex <- paste(month.name, collapse='|')
+    d <- gsub(paste0(".*(", months.regex, ")"), "\\1", 
+              report_date[grep(months.regex, report_date, TRUE)], TRUE)
+    report_date <- as.Date(d, format = '%B %d, %Y AT %I:%M %p')
+    
+    # add date column
+    pdf_name$report_date <- report_date
+    
+    # add month and year column
+    pdf_name$year = as.numeric(format(pdf_name$report_date, "%Y"))
+    pdf_name$month = as.numeric(format(pdf_name$report_date, "%m"))
+    
+    # create variable names
+    var_lines <- c("facility", 
+                   "recovered",
+                   "deceased",                               
+                   "positive_total", 
+                   "pending_test", 
+                   "negative_test",
+                   "report_date",
+                   "year",
+                   "month")
+    
+    # assign variable names
+    colnames(pdf_name) <- var_lines
   
-  # remove whitespace in facility names
-  pdf_name <- mgsub::mgsub(pdf_name, c("BARE HILL", 
-                                       "BEDFORD HILLS",
-                                       "CAPE VINCENT",
-                                       "FIVE POINTS",
-                                       "GREAT MEADOW ",
-                                       "GREEN HAVEN",
-                                       "HALE CREEK",
-                                       "MOHAWK/WALSH RMU",
-                                       "SING SING"), 
-                           c("BARE.HILL", 
-                             "BEDFORD.HILLS",
-                             "CAPE.VINCENT",                               
-                             "FIVE.POINTS", 
-                             "GREAT.MEADOW ", 
-                             "GREEN.HAVEN",
-                             "HALE.CREEK",
-                             "MOHAWK/WALSH.RMU",
-                             "SING.SING"))
-  
-  # create dataframe
-  pdf_temp <- Reduce(rbind, strsplit(trimws(pdf_name),"\\s{2,}"))
-  rownames(pdf_temp) <- 1:dim(pdf_temp)[1] # give numbers as rownames
-  pdf_name <- data.frame(pdf_temp, stringsAsFactors=FALSE)
-  
-  # separate string by white space
-  pdf_name <- data.frame(do.call('rbind', strsplit(as.character(pdf_name$pdf_temp),' ',fixed=TRUE)),stringsAsFactors=FALSE)
-  
-  # fix date format
-  months.regex <- paste(month.name, collapse='|')
-  d <- gsub(paste0(".*(", months.regex, ")"), "\\1", 
-            report_date[grep(months.regex, report_date, TRUE)], TRUE)
-  report_date <- as.Date(d, format = '%B %d, %Y AT %I:%M %p')
-  
-  # add date column
-  pdf_name$report_date <- report_date
-  
-  # add month and year column
-  pdf_name$year = as.numeric(format(pdf_name$report_date, "%Y"))
-  pdf_name$month = as.numeric(format(pdf_name$report_date, "%m"))
-
-  # create variable names
-  var_lines <- c("facility", 
-                 "recovered",
-                 "deceased",                               
-                 "positive_total", 
-                 "pending_test", 
-                 "negative_test",
-                 "report_date",
-                 "year",
-                 "month")
-  
-  # assign variable names
-  colnames(pdf_name) <- var_lines
+  # if RMU is not on its own line, execute the following 
+  } else {
+    
+    # select lines from adirondack to wyoming 
+    pdf_name <- pdf_name[(grep(pattern = "ADIRONDACK", pdf_name)):(grep(pattern = "WYOMING", pdf_name))] %>%
+      str_squish() %>%
+      str_replace_all("%","") %>% # remove % 
+      str_replace_all(",","") %>% # remove punctuation
+      str_replace_all("  "," ")   # remove extra white space
+    
+    # remove whitespace in facility names
+    pdf_name <- mgsub::mgsub(pdf_name, c("BARE HILL", 
+                                         "BEDFORD HILLS",
+                                         "CAPE VINCENT",
+                                         "FIVE POINTS",
+                                         "GREAT MEADOW ",
+                                         "GREEN HAVEN",
+                                         "HALE CREEK",
+                                         "MOHAWK/WALSH RMU",
+                                         "MOHAWK/WALSH",
+                                         "SING SING"), 
+                             c("BARE.HILL", 
+                               "BEDFORD.HILLS",
+                               "CAPE.VINCENT",                               
+                               "FIVE.POINTS", 
+                               "GREAT.MEADOW ", 
+                               "GREEN.HAVEN",
+                               "HALE.CREEK",
+                               "MOHAWK/WALSH.RMU",
+                               "MOHAWK/WALSH.RMU",
+                               "SING.SING"))
+    
+    # create dataframe
+    pdf_temp <- Reduce(rbind, strsplit(trimws(pdf_name),"\\s{2,}"))
+    rownames(pdf_temp) <- 1:dim(pdf_temp)[1] # give numbers as rownames
+    pdf_name <- data.frame(pdf_temp, stringsAsFactors=FALSE)
+    
+    # separate string by white space
+    pdf_name <- data.frame(do.call('rbind', strsplit(as.character(pdf_name$pdf_temp),' ',fixed=TRUE)),stringsAsFactors=FALSE)
+    
+    # fix date format
+    months.regex <- paste(month.name, collapse='|')
+    d <- gsub(paste0(".*(", months.regex, ")"), "\\1", 
+              report_date[grep(months.regex, report_date, TRUE)], TRUE)
+    report_date <- as.Date(d, format = '%B %d, %Y AT %I:%M %p')
+    
+    # add date column
+    pdf_name$report_date <- report_date
+    
+    # add month and year column
+    pdf_name$year = as.numeric(format(pdf_name$report_date, "%Y"))
+    pdf_name$month = as.numeric(format(pdf_name$report_date, "%m"))
+    
+    # create variable names
+    var_lines <- c("facility", 
+                   "recovered",
+                   "deceased",                               
+                   "positive_total", 
+                   "pending_test", 
+                   "negative_test",
+                   "report_date",
+                   "year",
+                   "month")
+    
+    # assign variable names
+    colnames(pdf_name) <- var_lines
+    
+  }
   
   # bind the rows
   outputs.df <- rbind(outputs.df, pdf_name)
@@ -305,3 +383,4 @@ top5_all <- data.frame(top5_recovered_increase$facility,
                        top5_negative_test_increase$facility,
                        top5_tests_given_increase$facility,
                        top5_positivity_rate_increase$facility)
+
