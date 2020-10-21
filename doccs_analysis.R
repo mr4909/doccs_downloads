@@ -37,7 +37,7 @@ getwd <- function(){
 
 # set working directory
 wd <- getwd()
-setwd("/Users/mari/cany/doccs_downloads/rawFiles")
+setwd(wd)
 
 # list all pdfs in directory
 temp <- list.files(pattern = "*.pdf", full.names = TRUE)
