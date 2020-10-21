@@ -6,6 +6,6 @@ controlFile.R: depends on the login to decide where to run script from and sets 
 
 webscraping.R: downloads PDF of DOCCS Confirmed Incarcerated Population By Facility from https://doccs.ny.gov/doccs-covid-19-report as a pdf and saves it toa subdirectory called raw files.  
 
-doccs_clean.R:import and clean pdfs in rawFiles and creates one large dataframe outputs.df.  
+doccs_clean.R: import and clean pdfs in rawFiles and creates one large dataframe outputs.df.  
 
 doccs_analysis.R: find increases in positive cases, negative cases, pending tests, and deaths for the current month.  
