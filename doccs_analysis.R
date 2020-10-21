@@ -1,6 +1,6 @@
 #######################################
 # DOCCS Covid Reports
-# Creates tables from DOCCS COVID Reports 
+# Retrieves Data from DOCCS COVID Reports 
 # by Mari Roberts
 # 10/14/2020
 #######################################
@@ -37,7 +37,7 @@ getwd <- function(){
 
 # set working directory
 wd <- getwd()
-setwd(wd)
+setwd("/Users/mari/cany/doccs_downloads/rawFiles")
 
 # list all pdfs in directory
 temp <- list.files(pattern = "*.pdf", full.names = TRUE)
@@ -57,7 +57,7 @@ for(i in 1:length(temp)){
   
   # read in each pdf file
   pdf_name <- pdf_text(temp[i]) %>% read_lines() 
-  # pdf_name <- pdf_text("/Users/mr4909/doccs_downloads/rawFiles/doccs-covid-19-confirmed-facility-9292020.pdf") %>% read_lines() 
+  #pdf_name <- pdf_text("/Users/mari/cany/doccs_downloads/rawFiles/doccs-covid-19-confirmed-by-facility-5.15.2020.pdf") %>% read_lines() 
   
   # extract date string
   report_date <- pdf_name[c(2)]
@@ -137,8 +137,8 @@ for(i in 1:length(temp)){
     
     # assign variable names
     colnames(pdf_name) <- var_lines
-  
-  # if RMU is not on its own line, execute the following 
+    
+    # if RMU is not on its own line, execute the following 
   } else {
     
     # select lines from adirondack to wyoming 
@@ -209,7 +209,7 @@ for(i in 1:length(temp)){
   
   # bind the rows
   outputs.df <- rbind(outputs.df, pdf_name)
-
+  
 }
 
 # fix variable types - change from chr to num
@@ -218,6 +218,28 @@ outputs.df$deceased <- as.numeric(outputs.df$deceased)
 outputs.df$positive_total <- as.numeric(outputs.df$positive_total)
 outputs.df$pending_test <- as.numeric(outputs.df$pending_test)
 outputs.df$negative_test <- as.numeric(outputs.df$negative_test)
+
+# check data 
+# outputs.df <- outputs.df %>% distinct()
+# temp <- outputs.df %>% 
+#   group_by(report_date) %>% 
+#   summarise_if(is.numeric, funs(sum))
+
+###############################################################################
+# issues with 10-13-2020 and 10-14-2020; DOCCS used date = 10-13-2020 for both
+###############################################################################
+
+# fix 10-13-2020 and 10-14-2020 dates
+outputs.10.13.10.14 <- outputs.df %>% filter(report_date == "2020-10-13")
+outputs.10.13.2020 <- outputs.10.13.10.14 %>% slice(1:52) 
+outputs.10.13.2020 <- outputs.10.13.2020 %>% mutate(report_date = as.Date("2020-10-12"))
+outputs.10.14.2020 <- outputs.10.13.10.14 %>% slice(53:104) 
+outputs.10.13.10.14 <- rbind(outputs.10.13.2020,outputs.10.14.2020)
+outputs.df <- outputs.df %>% filter(report_date != "2020-10-13")
+outputs.df <- rbind(outputs.10.13.10.14,outputs.df)
+
+# sort by date
+outputs.df <- outputs.df[order(outputs.df$report_date),]
 
 ##################
 # create variables
@@ -383,4 +405,3 @@ top5_all <- data.frame(top5_recovered_increase$facility,
                        top5_negative_test_increase$facility,
                        top5_tests_given_increase$facility,
                        top5_positivity_rate_increase$facility)
-
